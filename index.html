@@ -31,6 +31,7 @@
 						if (self.data.b_id == 0){
 							console.log(event);
 							document.querySelector('#button').emit('touch');
+							document.querySelector('#button').emit('s');
 							setTimeout(anim, 250);
 						}
 						
@@ -71,7 +72,7 @@
 			});
 		</script>
 	
-		<a-scene altspace="fullspace:false; verticalAlign: bottom">
+		<a-scene altspace="fullspace:false; verticalAlign: bottom" sync-system='app: Joust; author: Greeny3ny'>
 			<!--<a-box position="0 1 0" n-skeleton-parent="part:head" scale='1 1 1'></a-box>-->
 		
 			<a-assets>
@@ -84,12 +85,12 @@
 			<a-box color="blue" position="0 1.775	-0.25" scale="1 1.25 0.5"></a-box>
 			<a-box id="display" src="#display_temp" position="0 1.8 0.005" scale="0.8 1 0.01"></a-box>
 		
-			<a-box id="button" position='0.2 1.15 0.3' col='b_id:0' scale="0.2 0.2 0.2" color='red'>
+			<a-box id="button" position='0.2 1.15 0.3' col='b_id:0' scale="0.2 0.2 0.2" color='red' sync="ownOn:s" sync-transform>
 				<a-animation attribute="position" begin="touch" from="0.2 1.15 0.3" to="0.2 1.1 0.3" dur="250"></a-animation>
 				<a-animation attribute="position" begin="left" from="0.2 1.1 0.3" to="0.2 1.15 0.3" dur="250"></a-animation>
 			</a-box>
 			
-			<a-box id="joystick" position='-0.2 1.15 0.3' col='b_id:1' rotation="0 0 0" scale='0.05 0.3 0.05' color="green">
+			<a-box id="joystick" position='-0.2 1.15 0.3' col='b_id:1' rotation="0 0 0" scale='0.05 0.3 0.05' color="green" sync="ownOn:s" sync-transform>
 				<a-sphere scale="0.7 0.1 0.7" position="0 0.5 0"></a-sphere>
 				<a-animation attribute="rotation" begin="left" from="0 0 0" to="0 0 45" dur="250"></a-animation>
 				<a-animation attribute="rotation" begin="right" from="0 0 0" to="0 0 -45" dur="250"></a-animation>
@@ -166,6 +167,7 @@
 				
 				
 			}
+			document.querySelector('#joystick').emit("s");
 			
 			if (joystickT){
 				window.requestAnimationFrame(gethandPos);
