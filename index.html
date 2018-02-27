@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+	<body>
+	
+		<script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
+		<script src="https://sdk.altvr.com/libs/altspace.js/2.8.1/altspace.min.js"></script>
+		<script>
+			AFRAME.registerComponent('col',{
+				schema:
+				{
+					jointCubeSize:{
+						type: 'float',
+						default: 40
+					},
+					b_id:{
+						type: 'int'
+					}
+				},
+				init: function(){
+					const self = this;
+					const object = self.el.object3D;
+					
+					object.addBehavior(new altspace.utilities.behaviors.JointCollisionEvents({
+						joints: [['Index','Right',0],['Index', 'Left', 0]]	, jointCubeSize: self.data.jointCubeSize
+					}));
+					
+					object.addEventListener('jointcollisionenter', function(event){
+					
+						console.log("collide " + self.data.b_id);
+					
+						if (self.data.b_id == 0){
+							console.log(event);
+							document.querySelector('#button').emit('touch');
+							setTimeout(anim, 250);
+						}
+						
+						if (self.data.b_id == 1){
+							console.log(event);
+							joystickT = true;
+							gethandPos();
+						}
+						
+					});
+					
+					function anim(){
+						console.log("1 second passed");
+						document.querySelector('#button').emit('left')
+					}
+					
+					object.addEventListener('jointcollisionleave', function(event){
+						console.log('leave!');
+						if (self.data.b_id == 1){
+							joystickT = false;
+						}
+						
+					});
+					
+				}
+			});
+			
+			AFRAME.registerComponent('grip',{
+				init: function(){
+				
+					const object = self.el.object3D;
+					
+					object.addEventListener('gripdown', function(event){
+						console.log("grip down");
+					});
+				
+				}
+			});
+		</script>
+	
+		<a-scene altspace="fullspace:false; verticalAlign: bottom">
+			<!--<a-box position="0 1 0" n-skeleton-parent="part:head" scale='1 1 1'></a-box>-->
+		
+			<a-assets>
+				<img id="display_temp" src="assets/joust.png" />
+			</a-assets>
+		
+			<!--a-entity id="left-controller" grip hand-controls="hand: left"></a-entity>-->
+		
+			<a-box color="yellow" position="0 0.4	0" scale="1 1.5 1"></a-box>
+			<a-box color="blue" position="0 1.775	-0.25" scale="1 1.25 0.5"></a-box>
+			<a-box id="display" src="#display_temp" position="0 1.8 0.005" scale="0.8 1 0.01"></a-box>
+		
+			<a-box id="button" position='0.2 1.15 0.3' col='b_id:0' scale="0.2 0.2 0.2" color='red'>
+				<a-animation attribute="position" begin="touch" from="0.2 1.15 0.3" to="0.2 1.1 0.3" dur="250"></a-animation>
+				<a-animation attribute="position" begin="left" from="0.2 1.1 0.3" to="0.2 1.15 0.3" dur="250"></a-animation>
+			</a-box>
+			
+			<a-box id="joystick" position='-0.2 1.15 0.3' col='b_id:1' rotation="0 0 0" scale='0.05 0.3 0.05' color="green">
+				<a-sphere scale="0.7 0.1 0.7" position="0 0.5 0"></a-sphere>
+				<a-animation attribute="rotation" begin="left" from="0 0 0" to="0 0 45" dur="250"></a-animation>
+				<a-animation attribute="rotation" begin="right" from="0 0 0" to="0 0 -45" dur="250"></a-animation>
+				
+				<a-animation attribute="rotation" begin="cenFromLeft" from="0 0 45" to="0 0 0" dur="250"></a-animation>
+				<a-animation attribute="rotation" begin="cenFromRight" from="0 0 -45" to="0 0 0" dur="250"></a-animation>
+				
+			</a-box>
+			
+			<a-box id="test" position="1 1 1" color="yellow" scale="0.2 0.2 0.2"></a-box>
+			
+		</a-scene>
+	</body>
+	<script>
+		
+		var joystickT = false;
+		
+		var joyOr = "center";
+		
+		console.log("loaded");
+	
+		var skel;
+		var l_hand;
+		
+		altspace.getThreeJSTrackingSkeleton().then(function(event){
+			skel = event;
+			console.log("skeleton retrieved!");
+		}).then(function(e){
+			//console.log(skel);
+			//console.log(skel.getJoint('Hand','Left'));
+			l_hand = skel.getJoint('Hand','Left');
+			console.log(l_hand);
+			console.log("hands retrieved!");
+			console.log(l_hand.position);
+			document.querySelector('#test').setAttribute('position', l_hand.position);
+		});
+		
+		function gethandPos(){
+			//big left
+			//small right
+			l_hand = skel.getJoint('Hand','Left');
+			console.log(l_hand.position);
+			
+			if (l_hand.position.x > -45){
+				console.log("move right!");
+				document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
+				
+				if (joyOr != "right"){
+					document.querySelector('#joystick').emit("right");
+				}
+				joyOr = "right";
+			}
+			else if (l_hand.position.x < -65){
+				console.log("move left!");
+				document.querySelector('#joystick').setAttribute('rotation', "0 0 45");
+				if (joyOr != "left"){
+					document.querySelector('#joystick').emit("left");
+				}
+				joyOr = "left";
+			}
+			else
+			{
+				document.querySelector('#joystick').setAttribute('rotation', "0 0 0");
+				
+				if (joyOr == "right"){
+					document.querySelector('#joystick').emit("cenFromRight");
+				} else if (joyOr == "left"){
+					document.querySelector('#joystick').emit("cenFromLeft");
+				}
+				
+				
+				joyOr = "center";
+				
+				
+				
+			}
+			
+			if (joystickT){
+				window.requestAnimationFrame(gethandPos);
+			}
+			
+		}
+		
+		
+		
+	</script>
