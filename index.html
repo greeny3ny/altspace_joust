@@ -33,6 +33,7 @@
 							document.querySelector('#button').emit('touch');
 							document.querySelector('#button').emit('s');
 							setTimeout(anim, 250);
+							pJump();
 						}
 						
 						if (self.data.b_id == 1){
@@ -100,6 +101,8 @@
 				
 			</a-box>
 			
+			<a-box id="player" position='0 1.41 0.02' scale='0.075 0.075 0.075' color="red" sync="ownOn:s" sync-transform></a-box>
+			
 			<a-box id="test" position="1 1 1" color="yellow" scale="0.2 0.2 0.2"></a-box>
 			
 		</a-scene>
@@ -109,6 +112,9 @@
 		var joystickT = false;
 		
 		var joyOr = "center";
+		
+		var playerMovement = 0;
+		var playerJump = 1.41;
 		
 		console.log("loaded");
 	
@@ -128,6 +134,35 @@
 			document.querySelector('#test').setAttribute('position', l_hand.position);
 		});
 		
+		
+		
+		function pJump(){
+		 
+			console.log("jump");
+			
+			playerJump += 0.1;
+			
+			
+			console.log(playerJump);
+			document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
+
+			
+			document.querySelector('#player').emit("s");
+		}
+		
+		pFall(); //only call this here!
+		
+		function pFall(){
+			if (playerJump > 1.41){
+				console.log("falling");
+				playerJump -= 0.001;
+				console.log(playerJump);
+				document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
+				document.querySelector('#player').emit("s");
+			}
+			window.requestAnimationFrame(pFall);
+		}
+		
 		function gethandPos(){
 			//big left
 			//small right
@@ -138,6 +173,8 @@
 				console.log("move right!");
 				document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
 				
+				playerMovement += 0.005;
+				
 				if (joyOr != "right"){
 					document.querySelector('#joystick').emit("right");
 				}
@@ -146,6 +183,10 @@
 			else if (l_hand.position.x < -65){
 				console.log("move left!");
 				document.querySelector('#joystick').setAttribute('rotation', "0 0 45");
+				
+				playerMovement -= 0.005;
+				//document.querySelector('#player').setAttribute('position',  playerMovement + " 1.41 0.02");
+				
 				if (joyOr != "left"){
 					document.querySelector('#joystick').emit("left");
 				}
@@ -167,11 +208,18 @@
 				
 				
 			}
+			document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
+			
 			document.querySelector('#joystick').emit("s");
+			document.querySelector('#player').emit("s");
 			
 			if (joystickT){
 				window.requestAnimationFrame(gethandPos);
 			}
+			
+		}
+		
+		function updateGame(){
 			
 		}
 		
