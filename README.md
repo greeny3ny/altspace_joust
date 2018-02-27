@@ -3,15 +3,25 @@ Joust Arcade Game for AltspaceVR
 
 Work in Progress
 
+## How to Play:
+  This game requires you to be in VR with hands (Oculus Rift, Mixed Reality, Vive (maybe even NOLO???))
+
+  - Tap the red button with your right hand to "flap" and gain height
+  - Move the joystick with your left hand to move your "bird" left and right
+  
+  The aim of the game is to keep flapping and kill the other jousters, without being killed yourself (of course when I implement it). 
+
 ##  To Do :
  - Rescale player (player is a tad too big
  - Rescale game board (bit small)
+ - Fix glitchy joystick
  - Edge looping
- - Enemies
+ - Enemies (with egg dropping)
  - Platforms
  - Some form of vague physics engine (like momentum stuff)
      - Bird will continue moving after a bit due to force etc...
      - More feathery effect on bird
+     - Physics on eggs as well (when they are eventually implemented)
  - Animation on movement (specifically jumping)
  - Scoreboard
  - Scaling difficulty
