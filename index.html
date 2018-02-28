@@ -52,7 +52,10 @@
 					object.addEventListener('jointcollisionleave', function(event){
 						console.log('leave!');
 						if (self.data.b_id == 1){
-							joystickT = false;
+							console.log("joystick let go!");
+							//joyOr = "center";
+							//joystickT = false;
+							//document.querySelector('#joystick').setAttribute('rotation', "0 0 0");
 						}
 						
 					});
@@ -84,7 +87,7 @@
 		
 			<a-box color="yellow" position="0 0.4	0" scale="1 1.5 1"></a-box>
 			<a-box color="blue" position="0 1.775	-0.25" scale="1 1.25 0.5"></a-box>
-			<a-box id="display" src="#display_temp" position="0 1.8 0.005" scale="0.8 1 0.01"></a-box>
+			<a-box id="display" src="#display_temp" position="0 1.8 0.005" scale="0.9 1.1 0.01"></a-box>
 		
 			<a-box id="button" position='0.2 1.15 0.3' col='b_id:0' scale="0.2 0.2 0.2" color='red' sync="ownOn:s" sync-transform>
 				<a-animation attribute="position" begin="touch" from="0.2 1.15 0.3" to="0.2 1.1 0.3" dur="250"></a-animation>
@@ -103,26 +106,33 @@
 			
 			<a-box id="player" position='0 1.41 0.02' scale='0.075 0.075 0.075' color="red" sync="ownOn:s" sync-transform></a-box>
 			
-			<a-box id="test" position="1 1 1" color="yellow" scale="0.2 0.2 0.2"></a-box>
-			
 		</a-scene>
 	</body>
 	<script>
 		
-		const FLOOR = 1.41;
-		const GRAVITY = 0.0004; //MIGHT BE WORDED WRONG
-		const UPFORCE = 0.008; 
+		const FLOOR = 1.37; //default : 1.37 
+		const ROOF = 2.3;
+		const GRAVITY = 0.0004; //RATE OF CHANGE OF SPEED DOWNWARDS
+		const UPFORCE = 0.006; // == UPCAP , CAP ON HOW FAST BIRD MOVES UP
+		const DOWNCAP = 0.001; //CAP ON HOW FAST THE BIRD CAN FALL
+		
+		const LEFTWALL = -0.5; //TRY 0.4 ??
+		const RIGHTWALL = 0.5;
+		
+		
 		
 		var joystickT = false;
-		
 		var joyOr = "center";
 		
-		var playerMovement = 0;
-		var playerJump = FLOOR;
+		var playerX = 0;
+		var playerY = FLOOR; 
+
+		var Y_Momentum = 0;
+		var X_Momentum = 0;
 		
-		
-		
-		var upMomentum = 0;
+		const SIDEFORCE = 0.001;
+		const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
+		const SPEEDCAP = 0.025;
 		
 		console.log("loaded");
 	
@@ -133,80 +143,141 @@
 			skel = event;
 			console.log("skeleton retrieved!");
 		}).then(function(e){
-			//console.log(skel);
-			//console.log(skel.getJoint('Hand','Left'));
 			l_hand = skel.getJoint('Hand','Left');
 			console.log(l_hand);
 			console.log("hands retrieved!");
 			console.log(l_hand.position);
-			document.querySelector('#test').setAttribute('position', l_hand.position);
 		});
 		
 		
-		
+		//called when jump pressed
 		function pJump(){
 		 
 			console.log("jump");
 			
-			upMomentum += UPFORCE;
+			//replace this code with
+			//Y_Momentum = UPFORCE;  ???
 			
-			console.log(playerJump);
-			document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
-
+			Y_Momentum += UPFORCE;
 			
+			if (Y_Momentum > UPFORCE){
+				Y_Momentum = UPFORCE; //caps force (incase button is spammed)
+			}
+			
+			console.log(playerY);
+			
+			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
 			document.querySelector('#player').emit("s");
 		}
 		
 		pFall(); //only call this here!
 		
+		//called constantly
 		function pFall(){
 		
-			playerJump += upMomentum;
+			playerY += Y_Momentum;
 		
-			if (playerJump > FLOOR){
-				console.log("falling");
+			if (playerY > ROOF){
+				playerY = ROOF;
+			}
+		
+			if (playerY > FLOOR){
+			
+				if (Y_Momentum < -DOWNCAP){
+					Y_Momentum = -DOWNCAP;
+				}
 				
-				playerJump += upMomentum;
+				playerY += Y_Momentum;
+				Y_Momentum -= GRAVITY;
 				
-				upMomentum -= GRAVITY;
-				
-				console.log("mom :" + upMomentum);
-				
-				console.log(playerJump);
-				document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
+				//console.log("mom :" + Y_Momentum);
+				//console.log(playerY);
+				document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
 				document.querySelector('#player').emit("s");
 			}
 			else
 			{
-				upMomentum = 0;
-				playerJump = FLOOR;
+				Y_Momentum = 0;
+				playerY = FLOOR;
 			}
 			window.requestAnimationFrame(pFall);
+		}//end fall
+		
+		pXmove(); // only call this here!
+		
+		//function constantly running, deals with xmovement of player
+		function pXmove(){
+			
+			console.log("moving");
+			playerX  += X_Momentum;
+			console.log(playerX + " | " + X_Momentum);
+			
+			//side loop
+			if (playerX > RIGHTWALL){
+				playerX = LEFTWALL;
+			} else if (playerX < LEFTWALL){
+				playerX = RIGHTWALL;
+			}
+			
+			if (X_Momentum > STOPPINGFORCE){
+				X_Momentum -= STOPPINGFORCE;
+			} else if (X_Momentum < -STOPPINGFORCE){
+				X_Momentum += STOPPINGFORCE;
+			}
+			else
+			{
+				X_Momentum = 0;
+			}
+			
+			if (X_Momentum > SPEEDCAP){
+				X_Momentum = SPEEDCAP;
+			}
+			else if (X_Momentum < -SPEEDCAP){
+				X_Momentum = -SPEEDCAP;
+			}
+			
+			
+			//need to fix joystick issue first
+			console.log(joyOr);
+			
+			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
+			document.querySelector('#player').emit("s");
+			
+			window.requestAnimationFrame(pXmove);
 		}
 		
+		
 		function gethandPos(){
-			//big left
-			//small right
 			l_hand = skel.getJoint('Hand','Left');
-			console.log(l_hand.position);
+			//console.log(l_hand.position);
 			
-			if (l_hand.position.x > -45){
-				console.log("move right!");
+			var handPos = l_hand.position.x;
+			var handZ = l_hand.position.z;
+			
+			console.log(handZ);
+			if (handZ > 140){
+				joyOr = "center";
+				joystickT = false;
+			}
+			
+			if (handPos < -10 && handPos > -45 && joystickT){
+				//console.log("move right!");
 				document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
 				
-				playerMovement += 0.005;
+				X_Momentum += SIDEFORCE;
+				//playerX += -0.005;
 				
 				if (joyOr != "right"){
 					document.querySelector('#joystick').emit("right");
 				}
 				joyOr = "right";
 			}
-			else if (l_hand.position.x < -65){
-				console.log("move left!");
+			else if (handPos < -65 && handPos > -100 && joystickT){
+				//console.log("move left!");
 				document.querySelector('#joystick').setAttribute('rotation', "0 0 45");
 				
-				playerMovement -= 0.005;
-				//document.querySelector('#player').setAttribute('position',  playerMovement + " 1.41 0.02");
+				X_Momentum -= SIDEFORCE;
+				//document.querySelector('#player').setAttribute('position',  playerX + " 1.41 0.02");
 				
 				if (joyOr != "left"){
 					document.querySelector('#joystick').emit("left");
@@ -223,27 +294,21 @@
 					document.querySelector('#joystick').emit("cenFromLeft");
 				}
 				
+				console.log("test");
 				
 				joyOr = "center";
 				
-				
-				
 			}
-			document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
+			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
 			
 			document.querySelector('#joystick').emit("s");
 			document.querySelector('#player').emit("s");
 			
+			//Keep updating, but only if joystick is touched
 			if (joystickT){
 				window.requestAnimationFrame(gethandPos);
 			}
 			
-		}
-		
-		function updateGame(){
-			
-		}
-		
-		
+		}//end gethandpos
 		
 	</script>
