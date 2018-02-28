@@ -19,8 +19,8 @@ Work in Progress
  - Enemies (with egg dropping)
  - Platforms
  - Some form of vague physics engine (like momentum stuff)
-     - Bird will continue moving after a bit due to force etc...
-     - More feathery effect on bird
+     - X Axis Physics (momentum on x axis... and stuff)
+     - Y Axis Physics (gravity and feathery falling on player)                       - DONE!!!
      - Physics on eggs as well (when they are eventually implemented)
  - Animation on movement (specifically jumping)
  - Scoreboard
