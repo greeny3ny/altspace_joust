@@ -109,12 +109,18 @@
 	</body>
 	<script>
 		
+		const FLOOR = 1.41;
+		
 		var joystickT = false;
 		
 		var joyOr = "center";
 		
 		var playerMovement = 0;
-		var playerJump = 1.41;
+		var playerJump = FLOOR;
+		
+		
+		
+		var upMomentum = 0;
 		
 		console.log("loaded");
 	
@@ -140,7 +146,8 @@
 		 
 			console.log("jump");
 			
-			playerJump += 0.1;
+			upMomentum += 0.01;
+			
 			
 			
 			console.log(playerJump);
@@ -153,12 +160,26 @@
 		pFall(); //only call this here!
 		
 		function pFall(){
-			if (playerJump > 1.41){
+		
+			playerJump += upMomentum;
+		
+			if (playerJump > FLOOR){
 				console.log("falling");
-				playerJump -= 0.001;
+				
+				playerJump += upMomentum;
+				
+				upMomentum -= 0.0005;
+				
+				console.log("mom :" + upMomentum);
+				
 				console.log(playerJump);
 				document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
 				document.querySelector('#player').emit("s");
+			}
+			else
+			{
+				upMomentum = 0;
+				playerJump = FLOOR;
 			}
 			window.requestAnimationFrame(pFall);
 		}
