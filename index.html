@@ -4,6 +4,7 @@
 	
 		<script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
 		<script src="https://sdk.altvr.com/libs/altspace.js/2.8.1/altspace.min.js"></script>
+		<script src="enemy.js"></script>
 		<script>
 			AFRAME.registerComponent('col',{
 				schema:
@@ -30,50 +31,49 @@
 					
 						if (self.data.b_id == 0){
 							console.log(event);
-							document.querySelector('#button').emit('touch');
-							document.querySelector('#button').emit('s');
-							setTimeout(anim, 250);
-							pJump();
+							jumpPress();
 						}
 						
 						if (self.data.b_id == 1){
 							console.log(event);
 							joystickT = true;
-							gethandPos();
+							getHandPos();
 						}
 						
 					});
 					
-					function anim(){
-						console.log("1 second passed");
-						document.querySelector('#button').emit('left')
-					}
+					this.el.addEventListener('click', function(event){
+						console.log("click");
+						if (self.data.b_id == 0){
+							jumpPress();	
+						}
+					});
+					
+					
 					
 					object.addEventListener('jointcollisionleave', function(event){
 						console.log('leave!');
 						if (self.data.b_id == 1){
 							console.log("joystick let go!");
-							//joyOr = "center";
-							//joystickT = false;
-							//document.querySelector('#joystick').setAttribute('rotation', "0 0 0");
 						}
 						
 					});
 					
 				}
 			});
-			
-			AFRAME.registerComponent('grip',{
-				init: function(){
-				
-					const object = self.el.object3D;
-					
-					object.addEventListener('gripdown', function(event){
-						console.log("grip down");
-					});
-				
-				}
-			});
+		
+		function jumpPress(){
+			document.querySelector('#button').emit('touch');
+			document.querySelector('#button').emit('s');
+			setTimeout(anim, 250);
+			pJump();
+		}
+		
+		function anim(){
+			console.log("1 second passed");
+			document.querySelector('#button').emit('left')
+		}
+		
 		</script>
 	
 		<a-scene altspace="fullspace:false; verticalAlign: bottom" sync-system='app: Joust; author: Greeny3ny'>
@@ -110,6 +110,9 @@
 	</body>
 	<script>
 		
+		const scene = document.querySelector('a-scene');
+		const SCALE = 0.075;
+		
 		const FLOOR = 1.37; //default : 1.37 
 		const ROOF = 2.3;
 		const GRAVITY = 0.0004; //RATE OF CHANGE OF SPEED DOWNWARDS
@@ -118,6 +121,7 @@
 		
 		const LEFTWALL = -0.5; //TRY 0.4 ??
 		const RIGHTWALL = 0.5;
+		
 		
 		
 		
@@ -130,9 +134,9 @@
 		var Y_Momentum = 0;
 		var X_Momentum = 0;
 		
-		const SIDEFORCE = 0.001;
+		const SIDEFORCE = 0.0008;
 		const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
-		const SPEEDCAP = 0.025;
+		const SPEEDCAP = 0.015;
 		
 		console.log("loaded");
 	
@@ -148,69 +152,41 @@
 			console.log("hands retrieved!");
 			console.log(l_hand.position);
 		});
-		
-		
+
 		//called when jump pressed
 		function pJump(){
-		 
-			console.log("jump");
-			
-			//replace this code with
-			//Y_Momentum = UPFORCE;  ???
-			
 			Y_Momentum += UPFORCE;
-			
 			if (Y_Momentum > UPFORCE){
 				Y_Momentum = UPFORCE; //caps force (incase button is spammed)
 			}
-			
-			console.log(playerY);
-			
-			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
-			document.querySelector('#player').emit("s");
 		}
-		
-		pFall(); //only call this here!
 		
 		//called constantly
 		function pFall(){
-		
 			playerY += Y_Momentum;
-		
 			if (playerY > ROOF){
 				playerY = ROOF;
 			}
 		
 			if (playerY > FLOOR){
-			
 				if (Y_Momentum < -DOWNCAP){
 					Y_Momentum = -DOWNCAP;
 				}
-				
 				playerY += Y_Momentum;
 				Y_Momentum -= GRAVITY;
-				
-				//console.log("mom :" + Y_Momentum);
-				//console.log(playerY);
-				document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
-				document.querySelector('#player').emit("s");
 			}
 			else
 			{
 				Y_Momentum = 0;
 				playerY = FLOOR;
 			}
-			window.requestAnimationFrame(pFall);
 		}//end fall
-		
-		pXmove(); // only call this here!
-		
+
 		//function constantly running, deals with xmovement of player
 		function pXmove(){
-			
-			console.log("moving");
+			//console.log("moving");
 			playerX  += X_Momentum;
-			console.log(playerX + " | " + X_Momentum);
+			//console.log(playerX + " | " + X_Momentum);
 			
 			//side loop
 			if (playerX > RIGHTWALL){
@@ -219,6 +195,7 @@
 				playerX = RIGHTWALL;
 			}
 			
+			//issue here - when player changes direction, momentum doesnt stop...
 			if (X_Momentum > STOPPINGFORCE){
 				X_Momentum -= STOPPINGFORCE;
 			} else if (X_Momentum < -STOPPINGFORCE){
@@ -235,19 +212,9 @@
 			else if (X_Momentum < -SPEEDCAP){
 				X_Momentum = -SPEEDCAP;
 			}
-			
-			
-			//need to fix joystick issue first
-			console.log(joyOr);
-			
-			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
-			document.querySelector('#player').emit("s");
-			
-			window.requestAnimationFrame(pXmove);
-		}
+		}//end pmove
 		
-		
-		function gethandPos(){
+		function getHandPos(){
 			l_hand = skel.getJoint('Hand','Left');
 			//console.log(l_hand.position);
 			
@@ -294,21 +261,47 @@
 					document.querySelector('#joystick').emit("cenFromLeft");
 				}
 				
-				console.log("test");
+				//console.log("test");
 				
 				joyOr = "center";
 				
 			}
-			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
+
+		}//end gethandpos
+		
+		var testobj=new enemy();
+		
+		function detectCollision(){
 			
-			document.querySelector('#joystick').emit("s");
-			document.querySelector('#player').emit("s");
+			var eX = testobj.eX();
 			
-			//Keep updating, but only if joystick is touched
-			if (joystickT){
-				window.requestAnimationFrame(gethandPos);
+			//in testing...
+			//currently checking if left edge of player is less than right edge of box
+			if (playerX-0.0375 < (eX+0.0375)){
+				console.log("collision!");
 			}
 			
-		}//end gethandpos
+		}
+		
+		update();
+		//this is the only function that repeats itself!!!
+		function update(){
+			//console.log("updating");
+			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
+			document.querySelector('#player').emit("s");
+			document.querySelector('#joystick').emit("s");
+			
+			pXmove();
+			pFall();
+			
+			detectCollision();
+			
+			if (joystickT){
+				getHandPos();
+			}
+			
+			window.requestAnimationFrame(update);
+		}
+		
 		
 	</script>
