@@ -110,6 +110,8 @@
 	<script>
 		
 		const FLOOR = 1.41;
+		const GRAVITY = 0.0004; //MIGHT BE WORDED WRONG
+		const UPFORCE = 0.008; 
 		
 		var joystickT = false;
 		
@@ -146,9 +148,7 @@
 		 
 			console.log("jump");
 			
-			upMomentum += 0.01;
-			
-			
+			upMomentum += UPFORCE;
 			
 			console.log(playerJump);
 			document.querySelector('#player').setAttribute('position',  playerMovement + " " + playerJump + " 0.02");
@@ -168,7 +168,7 @@
 				
 				playerJump += upMomentum;
 				
-				upMomentum -= 0.0005;
+				upMomentum -= GRAVITY;
 				
 				console.log("mom :" + upMomentum);
 				
