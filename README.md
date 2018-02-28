@@ -13,16 +13,16 @@ Work in Progress
 
 ##  To Do :
  - Rescale player (player is a tad too big
- - Rescale game board (bit small)
+ - Rescale game board (bit small) - DONE!
  - Fix glitchy joystick
- - Edge looping
+ - Edge looping - DONE!
  - Enemies (with egg dropping)
  - Platforms
  - Some form of vague physics engine (like momentum stuff)
-     - X Axis Physics (momentum on x axis... and stuff)
+     - X Axis Physics (momentum on x axis... and stuff) - DONE !
      - Y Axis Physics (gravity and feathery falling on player)                       - DONE!!!
-     - Physics on eggs as well (when they are eventually implemented)
- - Animation on movement (specifically jumping)
+     - Physics on eggs as well, with them bouncing and sliding more (when they are eventually implemented)
+ - Animation on movement (specifically jumping) -- Worked out when doing physics.
  - Scoreboard
  - Scaling difficulty
  - Jousting mechanics (duuuuuuh)
