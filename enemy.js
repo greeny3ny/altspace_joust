@@ -1,22 +1,35 @@
 console.log("enemy.js loaded!");
 
-//local
+//SHIFT ALL VARIABLES INTO FUNCTION!!!!!
 var eX = -0.3; //temp val
 var eY = 1.4; //temp val 1.37
 
-function enemy(){
+//var enemyPhys = new physics();
+var en = document.createElement('a-box');
+
+function enemy(pX){
+
+	eX = pX;
 
 	console.log("Enemy created");
 	this.eX = getEX;
 	this.eY = getEY;
+	this.setY = setEY;
+	this.setPos = setPos;
 	
 	
-	var en = document.createElement('a-box');
-	en.setAttribute('position',eX + ' ' + eY + ' 0.02');
 	en.setAttribute('scale', SCALE +' ' + SCALE +' '+SCALE);
 			
 	scene.appendChild(en);
-	
+
+}
+
+function setPos(){
+	en.setAttribute('position', eX + ' ' + eY + ' 0.02');
+}
+
+function setEY(val){
+	eY = val;
 }
 
 function getEX(){
