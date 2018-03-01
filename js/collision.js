@@ -17,9 +17,9 @@ function detectCollision(){
 			//remove enemy
 			//drop egg
 			scene.remove(enemies[i].en);
-			console.log(i+"destroy");
-			enemies[i].destroy();
-			enemies.pop(i);
+			enemies[i].destroy(i);
+			//enemies.pop(i);
+			console.log(enemies);
 			birdsAlive --;
 			//enemy = null;
 		}
