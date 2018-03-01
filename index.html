@@ -221,10 +221,10 @@
 				joystickRight();
 			}
 			else if (handPos < -65 && handPos > -100 && joystickT){
-				joyStickLeft();
+				joystickLeft();
 			}
 			else {
-				joyStickCenter();
+				joystickCenter();
 			}
 			
 			playerPhys.mtmCng(joyOr);
@@ -243,7 +243,7 @@
 			for (i in enemies){
 				
 				if (!enemies[i].dead){
-				enPhys[i].jump();
+					enPhys[i].jump();
 				}
 				
 			}
@@ -272,6 +272,14 @@
 			
 			//need vague AI for enemy..
 			//enemy death can be handled better methinks...
+			
+			//AI -
+			//spawn going in one direction
+			//if hit platform they change direction
+			//hit roof bounce (change to physics)
+			//keep going in one direction but sometimes move their Y to a different area (top middle or bottom)
+			//will attempt to dodge attacks
+			
 			for (i in enemies){
 				if (!enemies[i].dead){
 					enPhys[i].mtmCng("left");
@@ -313,12 +321,13 @@
 			if (birdsAlive == 0){
 				console.log("All enemies dead! Level up!");
 				for (var i=0; i<level; i++){
-					var randX = Math.floor((Math.random()*10))/10;
-					var randY = Math.floor((Math.random()*20))/10 + FLOOR;
+					var randX = Math.floor((Math.random()*100))/100;
+					var randY = Math.floor((Math.random()*200))/100 + FLOOR;
 					console.log(randX + " | "+ randY);
 					
 					enemies[i] = new enemy(randX, randY);
 					enPhys[i] = new physics(randX, randY);
+					
 					birdsAlive++;
 				}
 				level++;
