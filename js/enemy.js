@@ -1,16 +1,14 @@
 console.log("enemy.js loaded!");
 
-function enemy(pX){
+function enemy(x, y){
 
 	var en = document.createElement('a-box');
 
-	var eX = -0.3; //temp val
-	var eY = 1.4; //temp val 1.37
+	var eX = x; //temp val
+	var eY = y; //temp val 1.37
 	
 	var destroyed = false;
-
-	eX = pX;
-
+	
 	console.log("Enemy created");
 	//vars
 	this.eX = eX;
@@ -22,7 +20,6 @@ function enemy(pX){
 	this.destroy = setDead;
 	this.setPos = setPos;
 	
-	
 	en.setAttribute('scale', SCALE +' ' + SCALE +' '+SCALE);
 			
 	scene.appendChild(en);
@@ -33,8 +30,13 @@ function setPos(){
 	this.en.setAttribute('position', this.eX + ' ' + this.eY + ' 0.02');
 }
 
-function setDead(){
-	console.log("enemy destroyed");
+function setDead(i){
+	enemies[i].en.setAttribute('color', 'red');
+	scene.remove(enemies[i].en);
+	birdsAlive --;
+	
 	this.dead = true;
+	
+	console.log("enemy destroyed" + i);
 	console.log("dropping egg!");
 }

@@ -13,15 +13,9 @@ function detectCollision(){
 	if (xCol && yCol){
 		if (playerY > eY){
 			console.log("player win");
-			enemies[i].en.setAttribute('color', 'red');
-			//remove enemy
-			//drop egg
-			scene.remove(enemies[i].en);
 			enemies[i].destroy(i);
-			//enemies.pop(i);
-			console.log(enemies);
-			birdsAlive --;
-			//enemy = null;
+			
+			
 		}
 		else if (eY > playerY){
 			console.log("enemy win");
