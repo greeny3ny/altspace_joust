@@ -238,40 +238,51 @@
 		}
 		
 		//testing ---------------------
-		
+		var enemyMov = "left"; //temp
 		
 		function detectCollision(){
-			/*
-			var eX = testEnemy.eX();
-			var eY = testEnemy.eY();
+			
+			var eX = testEnemy.eX;
+			var eY = testEnemy.eY;
 			const eZ = 0.02;
 			
-			if (playerX-0.0375 < (eX+0.0375) && playerX+0.0375 > (eX-0.0375)){
-				//console.log("collision!");
-				console.log(eY + " | " + playerY);
+			var xCol = (playerX-0.0375 < (eX+0.0375) && playerX+0.0375 > (eX-0.0375));
+			var yCol = (playerY-0.0375 < (eY+0.0375) && playerY+0.0375 > (eY-0.0375));
+			
+			if (xCol && yCol){
 				if (playerY > eY){
 					console.log("player win");
+					testEnemy.en.setAttribute('color', 'red');
+					//remove enemy
+					//drop egg
+					//scene.remove(testEnemy.en);
+					testEnemy.destroy();
+
+					//testEnemy = null;
 				}
 				else if (eY > playerY){
 					console.log("enemy win");
+					testEnemy.en.setAttribute('color', 'green');
 				}
 				else {
 					console.log("bump");
 				}
-				
-				
-			}
-			*/
+
+			}			
 		}
 		
 		function enFall(){
-			testEnemy.setY(testEnPhys.posY);
+			testEnemy.eY = testEnPhys.posY;
 		}
 		
 		setInterval(function(){ 
-			console.log("enemy flap");
-			testEnPhys.jump();
-		}, 3000);
+			//console.log("enemy flap");
+			console.log(testEnemy.dead);
+			if (!testEnemy.dead){
+				testEnPhys.jump();
+			}
+			
+		}, 600);
 		
 		//-------------
 		var counter = 0;
@@ -288,9 +299,10 @@
 			}
 			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
 			
-			testEnPhys.fall();
 			enFall();
-			testEnemy.setPos();
+			testEnPhys.fall();
+			
+			
 			
 			pXmove();
 			//playerPhys.moveX();
@@ -298,6 +310,18 @@
 			pFall();
 			playerPhys.fall();
 			
+			//need vague AI for enemy..
+			
+			if (!testEnemy.dead){
+				testEnPhys.mtmCng(enemyMov);
+				testEnemy.eX = testEnPhys.moveX();
+			}
+			else
+			{
+				testEnemy.eX = 100;
+				testEnemy.eY = 100;
+			}
+			testEnemy.setPos(); //sets enemy position
 			
 			detectCollision();
 			
