@@ -5,6 +5,7 @@
 		<script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
 		<script src="https://sdk.altvr.com/libs/altspace.js/2.8.1/altspace.min.js"></script>
 		<script src="enemy.js"></script>
+		<script src="physics.js"></script>
 		<script>
 		
 			var joyPositions = []
@@ -95,7 +96,7 @@
 			console.log("1 second passed");
 			document.querySelector('#button').emit('left')
 		}
-		
+
 		</script>
 	
 		<a-scene altspace="fullspace:false; verticalAlign: bottom" sync-system='app: Joust; author: Greeny3ny'>
@@ -103,6 +104,7 @@
 		
 			<a-assets>
 				<img id="display_temp" src="assets/joust.png" />
+				<img id="buzzard_temp" src="assets/buzzard.png" />
 			</a-assets>
 		
 			<!--a-entity id="left-controller" grip hand-controls="hand: left"></a-entity>-->
@@ -123,14 +125,15 @@
 				
 				<a-animation attribute="rotation" begin="cenFromLeft" from="0 0 45" to="0 0 0" dur="250"></a-animation>
 				<a-animation attribute="rotation" begin="cenFromRight" from="0 0 -45" to="0 0 0" dur="250"></a-animation>
-				
 			</a-box>
 			
 			<a-box id="leftBox_temp" col='b_id:10' color="orange" scale="0.05 0.05 0.05" position ="-0.3 1.15 0.3"></a-box>
 			<a-box id="rightBox_temp" col='b_id:11' color="orange" scale="0.05 0.05 0.05" position ="-0.1 1.15 0.3"></a-box>
 			<a-box id="centerBox_temp" col='b_id:20' color="orange" scale="0.05 0.05 0.05" position ="-0.2 1.15 0.4"></a-box>
 			
-			<a-box id="player" position='0 1.41 0.02' scale='0.075 0.075 0.075' color="red" sync="ownOn:s" sync-transform></a-box>
+			<a-box id="player" src="#buzzard_temp" position='0 1.41 0.02' scale='0.075 0.075 0.075' sync="ownOn:s" sync-transform>
+				<a-box id="lance" position='0 0 0.2' scale='2 0.1 0.1' color='orange'></a-box>
+			</a-box>
 			
 		</a-scene>
 	</body>
@@ -139,25 +142,15 @@
 		const scene = document.querySelector('a-scene');
 		const SCALE = 0.075;
 		
-		const FLOOR = 1.37; //default : 1.37 
-		const ROOF = 2.3;
-		const GRAVITY = 0.0004; //RATE OF CHANGE OF SPEED DOWNWARDS
-		const UPFORCE = 0.006; // == UPCAP , CAP ON HOW FAST BIRD MOVES UP
-		const DOWNCAP = 0.001; //CAP ON HOW FAST THE BIRD CAN FALL
-		
-		const LEFTWALL = -0.5; //TRY 0.4 ??
-		const RIGHTWALL = 0.5;
-		
 		const SIDEFORCE = 0.0008;
-		const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
-		const SPEEDCAP = 0.015;
+		
 		//----
 		
 		var joystickT = false;
 		var joyOr = "center";
 		
 		var playerX = 0;
-		var playerY = FLOOR; 
+		var playerY = 0; 
 
 		var Y_Momentum = 0;
 		var X_Momentum = 0;
@@ -165,11 +158,6 @@
 		var skel;
 		var l_hand;
 		//---------
-		
-		
-	
-		
-		
 		console.log("loaded");
 		
 		altspace.getThreeJSTrackingSkeleton().then(function(event){
@@ -181,66 +169,21 @@
 			console.log("hands retrieved!");
 			console.log(l_hand.position);
 		});
-
+		
+		var playerPhys = new physics();
 		//called when jump pressed
 		function pJump(){
-			Y_Momentum += UPFORCE;
-			if (Y_Momentum > UPFORCE){
-				Y_Momentum = UPFORCE; //caps force (incase button is spammed)
-			}
+			playerPhys.jump();
 		}
-		
+
 		//called constantly
 		function pFall(){
-			playerY += Y_Momentum;
-			if (playerY > ROOF){
-				playerY = ROOF;
-			}
-		
-			if (playerY > FLOOR){
-				if (Y_Momentum < -DOWNCAP){
-					Y_Momentum = -DOWNCAP;
-				}
-				playerY += Y_Momentum;
-				Y_Momentum -= GRAVITY;
-			}
-			else
-			{
-				Y_Momentum = 0;
-				playerY = FLOOR;
-			}
+			playerY = playerPhys.posY();
 		}//end fall
 
 		//function constantly running, deals with xmovement of player
 		function pXmove(){
-			//console.log("moving");
-			playerX  += X_Momentum;
-			//console.log(playerX + " | " + X_Momentum);
-			
-			//side loop
-			if (playerX > RIGHTWALL){
-				playerX = LEFTWALL;
-			} else if (playerX < LEFTWALL){
-				playerX = RIGHTWALL;
-			}
-			
-			//issue here - when player changes direction, momentum doesnt stop...
-			if (X_Momentum > STOPPINGFORCE){
-				X_Momentum -= STOPPINGFORCE;
-			} else if (X_Momentum < -STOPPINGFORCE){
-				X_Momentum += STOPPINGFORCE;
-			}
-			else
-			{
-				X_Momentum = 0;
-			}
-			
-			if (X_Momentum > SPEEDCAP){
-				X_Momentum = SPEEDCAP;
-			}
-			else if (X_Momentum < -SPEEDCAP){
-				X_Momentum = -SPEEDCAP;
-			}
+			playerX = playerPhys.posX();
 		}//end pmove
 		
 		function getHandPos(){
@@ -305,17 +248,21 @@
 			var eY = testEnemy.eY();
 			const eZ = 0.02;
 			
-			//in testing...
-			//currently checking if left edge of player is less than right edge of box
-			
 			if (playerX-0.0375 < (eX+0.0375) && playerX+0.0375 > (eX-0.0375)){
-				console.log("collision!");
+				//console.log("collision!");
+				console.log(eY + " | " + playerY);
+				if (playerY > eY){
+					console.log("player win");
+				}
+				else if (eY > playerY){
+					console.log("enemy win");
+				}
+				else {
+					console.log("bump");
+				}
+				
+				
 			}
-			
-			//if (playerX+0.0375 > (eX-0.0375)){
-			//	console.log("right side collided")
-			//}
-
 		}
 		
 		//-------------
@@ -329,7 +276,10 @@
 			document.querySelector('#joystick').emit("s");
 			
 			pXmove();
+			playerPhys.moveX();
+			
 			pFall();
+			playerPhys.fall();
 			
 			detectCollision();
 			

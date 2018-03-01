@@ -1,8 +1,8 @@
+console.log("enemy.js loaded!");
+
 //local
 var eX = -0.3; //temp val
-var eY = 1.37; //temp val
-
-console.log("Enemy.js loaded!");
+var eY = 1.4; //temp val 1.37
 
 function enemy(){
 
