@@ -6,6 +6,9 @@
 		<script src="https://sdk.altvr.com/libs/altspace.js/2.8.1/altspace.min.js"></script>
 		<script src="enemy.js"></script>
 		<script>
+		
+			var joyPositions = []
+			
 			AFRAME.registerComponent('col',{
 				schema:
 				{
@@ -25,16 +28,18 @@
 						joints: [['Index','Right',0],['Index', 'Left', 0]]	, jointCubeSize: self.data.jointCubeSize
 					}));
 					
+					var boxID = self.data.b_id;
+					
 					object.addEventListener('jointcollisionenter', function(event){
 					
 						console.log("collide " + self.data.b_id);
 					
-						if (self.data.b_id == 0){
+						if (boxID == 0){
 							console.log(event);
 							jumpPress();
 						}
 						
-						if (self.data.b_id == 1){
+						if (boxID == 1){
 							console.log(event);
 							joystickT = true;
 							getHandPos();
@@ -44,19 +49,36 @@
 					
 					this.el.addEventListener('click', function(event){
 						console.log("click");
-						if (self.data.b_id == 0){
-							jumpPress();	
+						switch (boxID){
+							case 0:
+								jumpPress();
+							break;
+							case 10:
+								joystickLeft();
+								joyPositions[0] = true;
+								joyPositions[1] = false;
+								joyPositions[2] = false;
+							break;
+							case 11:
+								joystickRight();
+								joyPositions[0] = false;
+								joyPositions[1] = false;
+								joyPositions[2] = true;
+							break;
+							case 20:
+								joystickCenter();
+								joyPositions[0] = false;
+								joyPositions[1] = true;
+								joyPositions[2] = false;
+							break;
 						}
 					});
-					
-					
-					
+
 					object.addEventListener('jointcollisionleave', function(event){
 						console.log('leave!');
-						if (self.data.b_id == 1){
+						if (boxID == 1){
 							console.log("joystick let go!");
 						}
-						
 					});
 					
 				}
@@ -104,6 +126,10 @@
 				
 			</a-box>
 			
+			<a-box id="leftBox_temp" col='b_id:10' color="orange" scale="0.05 0.05 0.05" position ="-0.3 1.15 0.3"></a-box>
+			<a-box id="rightBox_temp" col='b_id:11' color="orange" scale="0.05 0.05 0.05" position ="-0.1 1.15 0.3"></a-box>
+			<a-box id="centerBox_temp" col='b_id:20' color="orange" scale="0.05 0.05 0.05" position ="-0.2 1.15 0.4"></a-box>
+			
 			<a-box id="player" position='0 1.41 0.02' scale='0.075 0.075 0.075' color="red" sync="ownOn:s" sync-transform></a-box>
 			
 		</a-scene>
@@ -122,8 +148,10 @@
 		const LEFTWALL = -0.5; //TRY 0.4 ??
 		const RIGHTWALL = 0.5;
 		
-		
-		
+		const SIDEFORCE = 0.0008;
+		const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
+		const SPEEDCAP = 0.015;
+		//----
 		
 		var joystickT = false;
 		var joyOr = "center";
@@ -134,14 +162,15 @@
 		var Y_Momentum = 0;
 		var X_Momentum = 0;
 		
-		const SIDEFORCE = 0.0008;
-		const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
-		const SPEEDCAP = 0.015;
-		
-		console.log("loaded");
-	
 		var skel;
 		var l_hand;
+		//---------
+		
+		
+	
+		
+		
+		console.log("loaded");
 		
 		altspace.getThreeJSTrackingSkeleton().then(function(event){
 			skel = event;
@@ -228,60 +257,68 @@
 			}
 			
 			if (handPos < -10 && handPos > -45 && joystickT){
-				//console.log("move right!");
-				document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
-				
-				X_Momentum += SIDEFORCE;
-				//playerX += -0.005;
-				
-				if (joyOr != "right"){
-					document.querySelector('#joystick').emit("right");
-				}
-				joyOr = "right";
+				joystickRight();
 			}
 			else if (handPos < -65 && handPos > -100 && joystickT){
-				//console.log("move left!");
-				document.querySelector('#joystick').setAttribute('rotation', "0 0 45");
-				
-				X_Momentum -= SIDEFORCE;
-				//document.querySelector('#player').setAttribute('position',  playerX + " 1.41 0.02");
-				
-				if (joyOr != "left"){
-					document.querySelector('#joystick').emit("left");
-				}
-				joyOr = "left";
+				joyStickLeft();
 			}
-			else
-			{
-				document.querySelector('#joystick').setAttribute('rotation', "0 0 0");
-				
-				if (joyOr == "right"){
-					document.querySelector('#joystick').emit("cenFromRight");
-				} else if (joyOr == "left"){
-					document.querySelector('#joystick').emit("cenFromLeft");
-				}
-				
-				//console.log("test");
-				
-				joyOr = "center";
-				
+			else {
+				joyStickCenter();
 			}
 
 		}//end gethandpos
 		
-		var testobj=new enemy();
+		function joystickLeft(){
+			document.querySelector('#joystick').setAttribute('rotation', "0 0 45");	
+			X_Momentum -= SIDEFORCE;	
+			if (joyOr != "left"){
+				document.querySelector('#joystick').emit("left");
+			}
+			joyOr = "left";
+		}
+		
+		function joystickRight(){
+			document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
+			X_Momentum += SIDEFORCE;
+			if (joyOr != "right"){
+				document.querySelector('#joystick').emit("right");
+			}
+			joyOr = "right";
+		}
+		
+		function joystickCenter(){
+			document.querySelector('#joystick').setAttribute('rotation', "0 0 0");
+			if (joyOr == "right"){
+				document.querySelector('#joystick').emit("cenFromRight");
+			} else if (joyOr == "left"){
+				document.querySelector('#joystick').emit("cenFromLeft");
+			}
+			joyOr = "center";	
+		}
+		
+		//testing ---------------------
+		var testEnemy = new enemy();
 		
 		function detectCollision(){
 			
-			var eX = testobj.eX();
+			var eX = testEnemy.eX();
+			var eY = testEnemy.eY();
+			const eZ = 0.02;
 			
 			//in testing...
 			//currently checking if left edge of player is less than right edge of box
-			if (playerX-0.0375 < (eX+0.0375)){
+			
+			if (playerX-0.0375 < (eX+0.0375) && playerX+0.0375 > (eX-0.0375)){
 				console.log("collision!");
 			}
 			
+			//if (playerX+0.0375 > (eX-0.0375)){
+			//	console.log("right side collided")
+			//}
+
 		}
+		
+		//-------------
 		
 		update();
 		//this is the only function that repeats itself!!!
@@ -295,6 +332,14 @@
 			pFall();
 			
 			detectCollision();
+			
+			if (joyPositions[0]){
+				joystickLeft();
+			} else if (joyPositions[1]){
+				joystickCenter();
+			} else if (joyPositions[2]){
+				joystickRight();
+			}
 			
 			if (joystickT){
 				getHandPos();
