@@ -142,19 +142,12 @@
 		const scene = document.querySelector('a-scene');
 		const SCALE = 0.075;
 		
-		const SIDEFORCE = 0.0008;
-		
-		//----
-		
 		var joystickT = false;
 		var joyOr = "center";
 		
 		var playerX = 0;
 		var playerY = 0; 
 
-		var Y_Momentum = 0;
-		var X_Momentum = 0;
-		
 		var skel;
 		var l_hand;
 		//---------
@@ -170,7 +163,10 @@
 			console.log(l_hand.position);
 		});
 		
+		var testEnemy = new enemy(-0.2);
 		var playerPhys = new physics();
+		var testEnPhys = new physics();
+
 		//called when jump pressed
 		function pJump(){
 			playerPhys.jump();
@@ -178,12 +174,12 @@
 
 		//called constantly
 		function pFall(){
-			playerY = playerPhys.posY();
+			playerY = playerPhys.posY;
 		}//end fall
 
 		//function constantly running, deals with xmovement of player
 		function pXmove(){
-			playerX = playerPhys.posX();
+			playerX = playerPhys.moveX();
 		}//end pmove
 		
 		function getHandPos(){
@@ -208,12 +204,14 @@
 			else {
 				joyStickCenter();
 			}
+			
+			playerPhys.mtmCng(joyOr);
 
 		}//end gethandpos
 		
 		function joystickLeft(){
 			document.querySelector('#joystick').setAttribute('rotation', "0 0 45");	
-			X_Momentum -= SIDEFORCE;	
+			playerPhys.mtmCng("left");	
 			if (joyOr != "left"){
 				document.querySelector('#joystick').emit("left");
 			}
@@ -222,7 +220,7 @@
 		
 		function joystickRight(){
 			document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
-			X_Momentum += SIDEFORCE;
+			playerPhys.mtmCng("right");	
 			if (joyOr != "right"){
 				document.querySelector('#joystick').emit("right");
 			}
@@ -240,10 +238,10 @@
 		}
 		
 		//testing ---------------------
-		var testEnemy = new enemy();
+		
 		
 		function detectCollision(){
-			
+			/*
 			var eX = testEnemy.eX();
 			var eY = testEnemy.eY();
 			const eZ = 0.02;
@@ -263,23 +261,43 @@
 				
 				
 			}
+			*/
 		}
 		
-		//-------------
+		function enFall(){
+			testEnemy.setY(testEnPhys.posY);
+		}
 		
+		setInterval(function(){ 
+			console.log("enemy flap");
+			testEnPhys.jump();
+		}, 3000);
+		
+		//-------------
+		var counter = 0;
 		update();
 		//this is the only function that repeats itself!!!
 		function update(){
 			//console.log("updating");
+			counter ++;
+			//testing ...
+			if (counter > 60){
+				document.querySelector('#player').emit("s");
+				document.querySelector('#joystick').emit("s");
+				counter = 0;
+			}
 			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
-			document.querySelector('#player').emit("s");
-			document.querySelector('#joystick').emit("s");
+			
+			testEnPhys.fall();
+			enFall();
+			testEnemy.setPos();
 			
 			pXmove();
-			playerPhys.moveX();
+			//playerPhys.moveX();
 			
 			pFall();
 			playerPhys.fall();
+			
 			
 			detectCollision();
 			
