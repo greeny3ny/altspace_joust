@@ -2,39 +2,35 @@ console.log("physics.js loaded!");
 
 const FLOOR = 1.37; //default : 1.37 
 
-var Y_Momentum = 0;
-var X_Momentum = 0;
-var posY = FLOOR;
-var posX = 0;
-//-------
-
 function physics(){
 	console.log("physics object created");
 	
-	//RETURNS
-	this.posX = getPX;
-	this.posY = getPY;
+	var posX = 0;
+	var posY = FLOOR;
+	var X_Momentum = 0;
+	var Y_Momentum = 0;
 	
-	//NO RETURN
+	//VARIABLES
+	this.posX = posX;
+	this.posY = posY;
+	this.Xmom = X_Momentum;
+	this.Ymom = Y_Momentum;
+	
+	//RETURN FUNCTIONS
+	this.moveX = moveX;
+	
+	//NO RETURN FUNCTIONS
 	this.jump = jump;
 	this.fall = fall;
-	this.moveX = moveX;
-}
-
-function getPY(){
-	return posY;
-}
-
-function getPX(){
-	return posX;
+	this.mtmCng = momentumChange;
 }
 
 function jump(){
 	console.log("jump");
 	const UPFORCE = 0.006;
-	Y_Momentum += UPFORCE;
-	if (Y_Momentum > UPFORCE){
-		Y_Momentum = UPFORCE; //caps force (incase button is spammed)
+	this.Ymom += UPFORCE;
+	if (this.Ymom > UPFORCE){
+		this.Ymom = UPFORCE; //caps force (incase button is spammed)
 	}
 }
 
@@ -43,23 +39,23 @@ function fall(){
 	const GRAVITY = 0.0004;
 	const DOWNCAP = 0.001; //CAP ON HOW FAST THE OBJECT CAN FALL
 	
-	posY += Y_Momentum;
+	this.posY += this.Ymom;
 
-	if (posY > ROOF){
-		posY = ROOF;
+	if (this.posY > ROOF){
+		this.posY = ROOF;
 	}
 		
-	if (posY > FLOOR){
-		if (Y_Momentum < -DOWNCAP){
-			Y_Momentum = -DOWNCAP;
+	if (this.posY > FLOOR){
+		if (this.Ymom < -DOWNCAP){
+			this.Ymom = -DOWNCAP;
 		}
-		posY += Y_Momentum;
-		Y_Momentum -= GRAVITY;
+		this.posY += this.Ymom;
+		this.Ymom -= GRAVITY;
 	}
 	else
 	{
-		Y_Momentum = 0;
-		posY = FLOOR;
+		this.Ymom = 0;
+		this.posY = FLOOR;
 	}
 }
 
@@ -68,31 +64,41 @@ function moveX(){
 	const RIGHTWALL = 0.5;
 	const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
 	const SPEEDCAP = 0.015;
-		
-	posX += X_Momentum;
-			
+
+	this.posX += this.Xmom;
+	
 	//side loop
-	if (posX > RIGHTWALL){
-		posX = LEFTWALL;
-	} else if (posX < LEFTWALL){
-		posX = RIGHTWALL;
+	if (this.posX > RIGHTWALL){
+		this.posX = LEFTWALL;
+	} else if (this.posX < LEFTWALL){
+		this.posX = RIGHTWALL;
 	}
-			
+	//-- momentum stuff --	
 	//issue here - when player changes direction, momentum doesnt stop...
-	if (X_Momentum > STOPPINGFORCE){
-		X_Momentum -= STOPPINGFORCE;
-	} else if (X_Momentum < -STOPPINGFORCE){
-		X_Momentum += STOPPINGFORCE;
+	if (this.Xmom > STOPPINGFORCE){
+		this.Xmom -= STOPPINGFORCE;
+	} else if (this.Xmom < -STOPPINGFORCE){
+		this.Xmom += STOPPINGFORCE;
 	}
 	else{
-		X_Momentum = 0;
+		this.Xmom = 0;
 	}
 	
 	//Caps speed
-	if (X_Momentum > SPEEDCAP){
-		X_Momentum = SPEEDCAP;
+	if (this.Xmom > SPEEDCAP){
+		this.Xmom = SPEEDCAP;
 	}
-	else if (X_Momentum < -SPEEDCAP){
-		X_Momentum = -SPEEDCAP;
+	else if (this.Xmom < -SPEEDCAP){
+		this.Xmom = -SPEEDCAP;
+	}
+	return this.posX;
+}
+
+function momentumChange(dir){
+	const SIDEFORCE = 0.0008;
+	if (dir == "left"){
+		this.Xmom -= SIDEFORCE;
+	} else if (dir == "right"){
+		this.Xmom += SIDEFORCE;
 	}
 }
