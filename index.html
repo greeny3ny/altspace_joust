@@ -4,8 +4,14 @@
 	
 		<script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
 		<script src="https://sdk.altvr.com/libs/altspace.js/2.8.1/altspace.min.js"></script>
-		<script src="enemy.js"></script>
-		<script src="physics.js"></script>
+		
+		<!-- objects -->
+		<script src="js/enemy.js"></script>
+		<script src="js/physics.js"></script>
+		
+		<!-- functions (looks cleaner) -->
+		<script src="js/collision.js"></script>
+		<script src="js/joystick.js"></script>
 		<script>
 		
 			var joyPositions = []
@@ -48,8 +54,8 @@
 						
 					});
 					
+					var started = false;
 					this.el.addEventListener('click', function(event){
-						console.log("click");
 						switch (boxID){
 							case 0:
 								jumpPress();
@@ -72,6 +78,13 @@
 								joyPositions[1] = true;
 								joyPositions[2] = false;
 							break;
+							case 100:
+								if (!started){
+									update();
+									started = true;
+								}
+								
+							break;
 						}
 					});
 
@@ -93,32 +106,34 @@
 		}
 		
 		function anim(){
-			console.log("1 second passed");
 			document.querySelector('#button').emit('left')
 		}
 
 		</script>
 	
-		<a-scene altspace="fullspace:false; verticalAlign: bottom" sync-system='app: Joust; author: Greeny3ny'>
+		<a-scene altspace="fullspace:false; verticalAlign: bottom">
 			<!--<a-box position="0 1 0" n-skeleton-parent="part:head" scale='1 1 1'></a-box>-->
 		
 			<a-assets>
 				<img id="display_temp" src="assets/joust.png" />
 				<img id="buzzard_temp" src="assets/buzzard.png" />
+				<img id="logo" src="assets/logo.png"/>
 			</a-assets>
 		
 			<!--a-entity id="left-controller" grip hand-controls="hand: left"></a-entity>-->
 		
+			<a-box color="green" position="0 2.6 -0.15" scale="1 0.4 0.75"></a-box>
+			<a-plane src="#logo" position="0 2.6 0.23" scale="1 0.4 0.01"></a-plane>
 			<a-box color="yellow" position="0 0.4	0" scale="1 1.5 1"></a-box>
 			<a-box color="blue" position="0 1.775	-0.25" scale="1 1.25 0.5"></a-box>
 			<a-box id="display" src="#display_temp" position="0 1.8 0.005" scale="0.9 1.1 0.01"></a-box>
 		
-			<a-box id="button" position='0.2 1.15 0.3' col='b_id:0' scale="0.2 0.2 0.2" color='red' sync="ownOn:s" sync-transform>
+			<a-box id="button" position='0.2 1.15 0.3' col='b_id:0' scale="0.2 0.2 0.2" color='red'>
 				<a-animation attribute="position" begin="touch" from="0.2 1.15 0.3" to="0.2 1.1 0.3" dur="250"></a-animation>
 				<a-animation attribute="position" begin="left" from="0.2 1.1 0.3" to="0.2 1.15 0.3" dur="250"></a-animation>
 			</a-box>
 			
-			<a-box id="joystick" position='-0.2 1.15 0.3' col='b_id:1' rotation="0 0 0" scale='0.05 0.3 0.05' color="green" sync="ownOn:s" sync-transform>
+			<a-box id="joystick" position='-0.2 1.15 0.3' col='b_id:1' rotation="0 0 0" scale='0.05 0.3 0.05' color="green">
 				<a-sphere scale="0.7 0.1 0.7" position="0 0.5 0"></a-sphere>
 				<a-animation attribute="rotation" begin="left" from="0 0 0" to="0 0 45" dur="250"></a-animation>
 				<a-animation attribute="rotation" begin="right" from="0 0 0" to="0 0 -45" dur="250"></a-animation>
@@ -131,9 +146,12 @@
 			<a-box id="rightBox_temp" col='b_id:11' color="orange" scale="0.05 0.05 0.05" position ="-0.1 1.15 0.3"></a-box>
 			<a-box id="centerBox_temp" col='b_id:20' color="orange" scale="0.05 0.05 0.05" position ="-0.2 1.15 0.4"></a-box>
 			
-			<a-box id="player" src="#buzzard_temp" position='0 1.41 0.02' scale='0.075 0.075 0.075' sync="ownOn:s" sync-transform>
+			<a-box id="player" src="#buzzard_temp" position='0 1.41 0.02' scale='0.075 0.075 0.075'>
 				<a-box id="lance" position='0 0 0.2' scale='2 0.1 0.1' color='orange'></a-box>
 			</a-box>
+			
+			<a-box id="startGame" col="b_id:100" color="red" scale="0.05 0.05 0.05" position="0.4 1.02 0.5"></a-box>
+			<a-box id="coinSlot" color="black" scale="0.04 0.1 0.04" position="0.3 1 0.5"></a-box>
 			
 		</a-scene>
 	</body>
@@ -150,6 +168,9 @@
 
 		var skel;
 		var l_hand;
+		
+		var enemies = [];
+		var enPhys  = [];
 		//---------
 		console.log("loaded");
 		
@@ -163,9 +184,10 @@
 			console.log(l_hand.position);
 		});
 		
-		var testEnemy = new enemy(-0.2);
-		var playerPhys = new physics();
-		var testEnPhys = new physics();
+		var playerPhys = new physics(0,FLOOR);
+		
+		
+		
 
 		//called when jump pressed
 		function pJump(){
@@ -209,120 +231,61 @@
 
 		}//end gethandpos
 		
-		function joystickLeft(){
-			document.querySelector('#joystick').setAttribute('rotation', "0 0 45");	
-			playerPhys.mtmCng("left");	
-			if (joyOr != "left"){
-				document.querySelector('#joystick').emit("left");
-			}
-			joyOr = "left";
-		}
-		
-		function joystickRight(){
-			document.querySelector('#joystick').setAttribute('rotation', "0 0 -45");
-			playerPhys.mtmCng("right");	
-			if (joyOr != "right"){
-				document.querySelector('#joystick').emit("right");
-			}
-			joyOr = "right";
-		}
-		
-		function joystickCenter(){
-			document.querySelector('#joystick').setAttribute('rotation', "0 0 0");
-			if (joyOr == "right"){
-				document.querySelector('#joystick').emit("cenFromRight");
-			} else if (joyOr == "left"){
-				document.querySelector('#joystick').emit("cenFromLeft");
-			}
-			joyOr = "center";	
-		}
-		
-		//testing ---------------------
-		var enemyMov = "left"; //temp
-		
-		function detectCollision(){
-			
-			var eX = testEnemy.eX;
-			var eY = testEnemy.eY;
-			const eZ = 0.02;
-			
-			var xCol = (playerX-0.0375 < (eX+0.0375) && playerX+0.0375 > (eX-0.0375));
-			var yCol = (playerY-0.0375 < (eY+0.0375) && playerY+0.0375 > (eY-0.0375));
-			
-			if (xCol && yCol){
-				if (playerY > eY){
-					console.log("player win");
-					testEnemy.en.setAttribute('color', 'red');
-					//remove enemy
-					//drop egg
-					//scene.remove(testEnemy.en);
-					testEnemy.destroy();
-
-					//testEnemy = null;
-				}
-				else if (eY > playerY){
-					console.log("enemy win");
-					testEnemy.en.setAttribute('color', 'green');
-				}
-				else {
-					console.log("bump");
-				}
-
-			}			
-		}
-		
 		function enFall(){
-			testEnemy.eY = testEnPhys.posY;
+			for (i in enemies){
+				enemies[i].eY = enPhys[i].posY;
+			}
 		}
 		
 		setInterval(function(){ 
 			//console.log("enemy flap");
-			console.log(testEnemy.dead);
-			if (!testEnemy.dead){
-				testEnPhys.jump();
+			
+			for (i in enemies){
+				
+				if (!enemies[i].dead){
+				enPhys[i].jump();
+				}
+				
 			}
+			
+			
 			
 		}, 600);
 		
 		//-------------
-		var counter = 0;
-		update();
+		
+		//update();
 		//this is the only function that repeats itself!!!
 		function update(){
-			//console.log("updating");
-			counter ++;
-			//testing ...
-			if (counter > 60){
-				document.querySelector('#player').emit("s");
-				document.querySelector('#joystick').emit("s");
-				counter = 0;
-			}
+
 			document.querySelector('#player').setAttribute('position',  playerX + " " + playerY + " 0.02");
 			
 			enFall();
-			testEnPhys.fall();
 			
-			
+
+			//--
 			
 			pXmove();
-			//playerPhys.moveX();
 			
 			pFall();
 			playerPhys.fall();
 			
 			//need vague AI for enemy..
-			
-			if (!testEnemy.dead){
-				testEnPhys.mtmCng(enemyMov);
-				testEnemy.eX = testEnPhys.moveX();
+			//enemy death can be handled better methinks...
+			for (i in enemies){
+				if (!enemies[i].dead){
+					enPhys[i].mtmCng("left");
+					enemies[i].eX = enPhys[i].moveX();
+					enPhys[i].fall();
+				}
+				else
+				{
+					enemies[i].eX = 100;
+					enemies[i].eY = 100;
+				}
+				enemies[i].setPos(); //sets enemy position
 			}
-			else
-			{
-				testEnemy.eX = 100;
-				testEnemy.eY = 100;
-			}
-			testEnemy.setPos(); //sets enemy position
-			
+
 			detectCollision();
 			
 			if (joyPositions[0]){
@@ -337,7 +300,30 @@
 				getHandPos();
 			}
 			
+			checkEmpty();
+			
 			window.requestAnimationFrame(update);
+		}
+		
+		var level = 1;
+		var birdsAlive = 0;
+		function checkEmpty(){
+			//console.log(enemies.length);
+			//console.log(birdsAlive);
+			if (birdsAlive == 0){
+				console.log("All enemies dead! Level up!");
+				for (var i=0; i<level; i++){
+					var randX = Math.floor((Math.random()*10))/10;
+					var randY = Math.floor((Math.random()*20))/10 + FLOOR;
+					console.log(randX + " | "+ randY);
+					
+					enemies[i] = new enemy(randX, randY);
+					enPhys[i] = new physics(randX, randY);
+					birdsAlive++;
+				}
+				level++;
+			}
+			
 		}
 		
 		
