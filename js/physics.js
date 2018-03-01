@@ -2,11 +2,11 @@ console.log("physics.js loaded!");
 
 const FLOOR = 1.37; //default : 1.37 
 
-function physics(){
+function physics(x,y){
 	console.log("physics object created");
 	
-	var posX = 0;
-	var posY = FLOOR;
+	var posX = x;
+	var posY = y;
 	var X_Momentum = 0;
 	var Y_Momentum = 0;
 	
@@ -26,7 +26,7 @@ function physics(){
 }
 
 function jump(){
-	console.log("jump");
+	//console.log("jump");
 	const UPFORCE = 0.006;
 	this.Ymom += UPFORCE;
 	if (this.Ymom > UPFORCE){
@@ -62,8 +62,8 @@ function fall(){
 function moveX(){
 	const LEFTWALL = -0.5; //TRY 0.4 ??
 	const RIGHTWALL = 0.5;
-	const STOPPINGFORCE = 0.0005; // POSSIBLE MERGE WITH SIDEFORCE??
-	const SPEEDCAP = 0.015;
+	const STOPPINGFORCE = 0.0003; // POSSIBLE MERGE WITH SIDEFORCE??
+	const SPEEDCAP = 0.01;
 
 	this.posX += this.Xmom;
 	
@@ -95,7 +95,7 @@ function moveX(){
 }
 
 function momentumChange(dir){
-	const SIDEFORCE = 0.0008;
+	const SIDEFORCE = 0.0005;
 	if (dir == "left"){
 		this.Xmom -= SIDEFORCE;
 	} else if (dir == "right"){
