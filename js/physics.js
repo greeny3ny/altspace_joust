@@ -1,6 +1,6 @@
 console.log("physics.js loaded!");
 
-const FLOOR = 1.37; //default : 1.37 
+//const FLOOR = 1.37; //default : 1.37 
 
 function physics(x,y){
 	console.log("physics object created");
@@ -9,12 +9,16 @@ function physics(x,y){
 	var posY = y;
 	var X_Momentum = 0;
 	var Y_Momentum = 0;
+	var floor = 2;
+	var roof = 2.3;
 	
 	//VARIABLES
 	this.posX = posX;
 	this.posY = posY;
 	this.Xmom = X_Momentum;
 	this.Ymom = Y_Momentum;
+	this.floor = floor;
+	this.roof = roof;
 	
 	//RETURN FUNCTIONS
 	this.moveX = moveX;
@@ -35,17 +39,16 @@ function jump(){
 }
 
 function fall(){
-	const ROOF = 2.3;
 	const GRAVITY = 0.0004;
 	const DOWNCAP = 0.001; //CAP ON HOW FAST THE OBJECT CAN FALL
 	
 	this.posY += this.Ymom;
 
-	if (this.posY > ROOF){
-		this.posY = ROOF;
+	if (this.posY > this.roof){
+		this.posY = this.roof;
 	}
 		
-	if (this.posY > FLOOR){
+	if (this.posY > this.floor){
 		if (this.Ymom < -DOWNCAP){
 			this.Ymom = -DOWNCAP;
 		}
@@ -55,7 +58,7 @@ function fall(){
 	else
 	{
 		this.Ymom = 0;
-		this.posY = FLOOR;
+		this.posY = this.floor;
 	}
 }
 
