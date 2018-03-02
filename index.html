@@ -8,6 +8,7 @@
 		<!-- objects -->
 		<script src="js/enemy.js"></script>
 		<script src="js/physics.js"></script>
+		<script src="js/platform.js"></script>
 		
 		<!-- functions (looks cleaner) -->
 		<script src="js/collision.js"></script>
@@ -159,6 +160,7 @@
 		
 		const scene = document.querySelector('a-scene');
 		const SCALE = 0.075;
+		const HALFSCALE = SCALE/2;
 		
 		var joystickT = false;
 		var joyOr = "center";
@@ -171,6 +173,8 @@
 		
 		var enemies = [];
 		var enPhys  = [];
+		
+		var playerPhys = new physics(0,0);
 		//---------
 		console.log("loaded");
 		
@@ -184,11 +188,6 @@
 			console.log(l_hand.position);
 		});
 		
-		var playerPhys = new physics(0,FLOOR);
-		
-		
-		
-
 		//called when jump pressed
 		function pJump(){
 			playerPhys.jump();
@@ -252,6 +251,14 @@
 			
 		}, 600);
 		
+		
+		//----
+		//set platforms
+		var platforms = [];
+		platforms[0] = new platform(0.3, 0, 2); //middle platform
+		platforms[1] = new platform(0.6, 0, 1.3); //bot
+		platforms[2] = new platform(0.2, 0.35, 1.7); //left
+		platforms[3] = new platform(0.2, -0.35, 1.7); //right
 		//-------------
 		
 		//update();
@@ -294,7 +301,8 @@
 				enemies[i].setPos(); //sets enemy position
 			}
 
-			detectCollision();
+			detectEnemyCollision();
+			detectPlatformCollision();
 			
 			if (joyPositions[0]){
 				joystickLeft();
@@ -322,7 +330,7 @@
 				console.log("All enemies dead! Level up!");
 				for (var i=0; i<level; i++){
 					var randX = Math.floor((Math.random()*100))/100;
-					var randY = Math.floor((Math.random()*200))/100 + FLOOR;
+					var randY = Math.floor((Math.random()*200))/100 + 1.37;
 					console.log(randX + " | "+ randY);
 					
 					enemies[i] = new enemy(randX, randY);
