@@ -19,14 +19,14 @@ Work in Progress
  - Rescale player (player is a tad too big
  - Fix glitchy joystick
  - Enemies (with egg dropping)
-          - Enemies a WIP
-          - Eggs NYI
+     - Enemies a WIP
+     - Eggs NYI
  - Tweak physics a bit
      - Also put physics on eggs as well, with them bouncing and sliding more (when they are eventually implemented)
  - Scoreboard
  - Scaling difficulty
  - Jousting mechanics
-       - Kinda there, still working on it
+     - Kinda there, still working on it
  - Bird models
  - Sounds
  
